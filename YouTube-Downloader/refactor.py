@@ -3,6 +3,11 @@
 
 # Dependencies
 import youtube_dl
+from shutil import which
+
+
+def check_if_executable_in_path(tool: str) -> bool:
+    return which(tool) is not None
 
 
 class Logger:
@@ -22,10 +27,17 @@ class YouTubeDL:
     # hook
     # prompt(s)
     # validator(s)
+    # downloader
 
     def __init__(self):
         self.audio_formats = {'aac', 'flac', 'mp3', 'm4a', 'opus', 'vorbis', 'wav'}
         self.default_audio_format = 'm4a'
+        self.argv = {
+            'format': f'bestaudio[ext={self.default_audio_format}]',
+            'outtmpl': '%(title)s.%(ext)s',
+            'logger': Logger(),
+            'progress_hooks': [self.post_transaction_hook]
+        }
 
         # to be determined/assigned
         self.youtube_url = ''
@@ -54,3 +66,7 @@ class YouTubeDL:
     def validate_audio_format(self):
         if self.audio_format not in self.audio_formats:
             self.audio_format = self.default_audio_format
+
+    def get_audio_of(self):
+        with youtube_dl.YoutubeDL(self.argv) as ydl:
+            ydl.download([self.youtube_url])
